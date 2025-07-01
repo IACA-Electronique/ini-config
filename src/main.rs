@@ -11,9 +11,9 @@ use std::process;
 use config_file::ConfigFile;
 use file_reader::FileReader;
 use file_writer::FileWriter;
-use preset_manager::PresetManager;
 use ini_config::backup_manager::BackupManager;
 use ini_config::low_level::filesystem_manager::DefaultFileSystemManager;
+use preset_manager::PresetManager;
 
 const BACKUP_DIR_NAME: &str = ".dir";
 
@@ -30,7 +30,11 @@ impl App {
         Self {
             cli,
             config_file: ConfigFile::new(),
-            backup_manager: BackupManager::new(&config_file_path, &format!("{config_file_path}{BACKUP_DIR_NAME}"), Box::new(DefaultFileSystemManager)),
+            backup_manager: BackupManager::new(
+                &config_file_path,
+                &format!("{config_file_path}{BACKUP_DIR_NAME}"),
+                Box::new(DefaultFileSystemManager),
+            ),
         }
     }
 
@@ -38,7 +42,6 @@ impl App {
         self.load_config_or_exit();
         self.handle_cli();
     }
-
 
     fn handle_cli(&mut self) {
         let path = &self.cli.file;
@@ -56,15 +59,28 @@ impl App {
                 }
                 Err(e) => error(&format!("Error setting value: {e}")),
             },
-            Commands::Del { section, param } => {
-                match self.config_file.delete(&section, &param) {
-                    Ok(_) => {
-                        log(&format!("Successfully deleted {param} from section [{section}]"));
-                        self.save_config()
-                    }
-                    Err(e) => error(&format!("Error deleting value: {e}")),
+            Commands::Add {
+                section,
+                param,
+                value,
+            } => match self.config_file.add(&section, &param, &value) {
+                Ok(_) => {
+                    log(&format!(
+                        "Successfully add {param} = {value} in section [{section}]"
+                    ));
+                    self.save_config();
                 }
-            }
+                Err(e) => error(&format!("Error setting value: {e}")),
+            },
+            Commands::Del { section, param } => match self.config_file.delete(&section, &param) {
+                Ok(_) => {
+                    log(&format!(
+                        "Successfully deleted {param} from section [{section}]"
+                    ));
+                    self.save_config()
+                }
+                Err(e) => error(&format!("Error deleting value: {e}")),
+            },
             Commands::Preset { directory, action } => match action {
                 PresetCommands::Load { preset_name } => {
                     let preset_manager = PresetManager::new(directory, &path);
@@ -75,7 +91,9 @@ impl App {
                                 Ok(_) => {
                                     log(&format!("Successfully loaded preset: {preset_name}"));
                                 }
-                                Err(e) => error(&format!("Error loading preset '{preset_name}' : {e}")),
+                                Err(e) => {
+                                    error(&format!("Error loading preset '{preset_name}' : {e}"))
+                                }
                             }
                         }
                         Err(e) => {
@@ -84,30 +102,26 @@ impl App {
                     }
                 }
             },
-            Commands::ListBackup { .. } => {
-                match self.backup_manager.list() {
-                    Ok(backups) => {
-                        if backups.is_empty() {
-                            log("No backups found.\n");
-                        } else {
-                            let mut i : usize = 0;
-                            for backup in backups {
-                                log(&format!("{i} | {backup}"));
-                                i = i+1;
-                            }
+            Commands::ListBackup { .. } => match self.backup_manager.list() {
+                Ok(backups) => {
+                    if backups.is_empty() {
+                        log("No backups found.\n");
+                    } else {
+                        let mut i: usize = 0;
+                        for backup in backups {
+                            log(&format!("{i} | {backup}"));
+                            i = i + 1;
                         }
                     }
-                    Err(e) => error(&format!("Error listing backups: {e}")),
                 }
+                Err(e) => error(&format!("Error listing backups: {e}")),
             },
-            Commands::Restore {index} => {
-                match self.backup_manager.restore(index.clone()) {
-                    Ok(_) => {
-                        log("Backup restored.\n");
-                    }
-                    Err(e) => error(&format!("Error restoring backup: {e}")),
+            Commands::Restore { index } => match self.backup_manager.restore(index.clone()) {
+                Ok(_) => {
+                    log("Backup restored.\n");
                 }
-            }
+                Err(e) => error(&format!("Error restoring backup: {e}")),
+            },
         }
     }
 
@@ -151,7 +165,6 @@ fn main() {
     let mut app = App::new();
     app.run();
 }
-
 
 fn log(message: &str) {
     println!("{message}");
