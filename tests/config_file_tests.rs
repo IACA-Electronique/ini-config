@@ -19,7 +19,7 @@ fn test_set_with_loaded_config() {
 
     // Verify the value was set correctly
     let value = config.get("test_section", "new_key");
-    assert_eq!(value, Some("new_value".to_string()));
+    assert_eq!(value, vec!["new_value"]);
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn test_set_updates_existing_value() {
 
     // Verify the value was updated
     let value = config.get("test_section", "existing_key");
-    assert_eq!(value, Some("new_value".to_string()));
+    assert_eq!(value, vec!["new_value"]);
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn test_set_creates_new_section() {
 
     // Verify the value was set in the new section
     let value = config.get("new_section", "new_key");
-    assert_eq!(value, Some("new_value".to_string()));
+    assert_eq!(value, vec!["new_value"]);
 }
 
 #[test]
@@ -104,9 +104,9 @@ fn test_delete_existing_key() {
     assert!(result.is_ok());
 
     // Verify the key was deleted
-    assert_eq!(config.get("test_section", "key_to_delete"), None);
+    assert_eq!(config.get("test_section", "key_to_delete"), Vec::<String>::new());
     // Verify other keys remain intact
-    assert_eq!(config.get("test_section", "other_key"), Some("other_value".to_string()));
+    assert_eq!(config.get("test_section", "other_key"), vec!["other_value"]);
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn test_delete_nonexistent_key() {
     assert!(result.is_ok()); // delete_from doesn't error on non-existent keys
 
     // Verify existing keys remain intact
-    assert_eq!(config.get("test_section", "existing_key"), Some("value".to_string()));
+    assert_eq!(config.get("test_section", "existing_key"), vec!["value"]);
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn test_delete_from_nonexistent_section() {
     assert!(result.is_ok()); // delete_from doesn't error on non-existent sections
 
     // Verify existing section remains intact
-    assert_eq!(config.get("existing_section", "key"), Some("value".to_string()));
+    assert_eq!(config.get("existing_section", "key"), vec!["value"]);
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn test_delete_last_key_in_section() {
     assert!(result.is_ok());
 
     // Verify the key was deleted
-    assert_eq!(config.get("test_section", "single_key"), None);
+    assert_eq!(config.get("test_section", "single_key"), Vec::<String>::new());
     // The section should still exist but be empty
     assert_eq!(config.to_string(), "[test_section]\n");
 }

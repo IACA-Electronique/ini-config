@@ -14,13 +14,19 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Set {
-        #[arg(short, long, default_value = "all")]
+        #[arg(short, long, default_value = "")]
+        section: String,
+        param: String,
+        value: String,
+    },
+    Add {
+        #[arg(short, long, default_value = "")]
         section: String,
         param: String,
         value: String,
     },
     Del {
-        #[arg(short, long, default_value = "all")]
+        #[arg(short, long, default_value = "")]
         section: String,
         param: String,
     },

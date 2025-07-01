@@ -1,0 +1,28 @@
+stages:
+  - build
+
+variables:
+  PROJECT_NAME: ini-config
+
+build:
+  stage: build
+  image: rust:1.86-bullseye
+  only:
+    - tags
+  variables:
+    EXECUTABLE_NAME: ini_config
+  script:
+    - apt-get update
+    - apt-get install -y gcc-aarch64-linux-gnu
+    - rustup target add aarch64-unknown-linux-gnu
+    - cargo clean
+    - cargo build --release --target aarch64-unknown-linux-gnu
+    - cp target/aarch64-unknown-linux-gnu/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}-aarch64
+    - cargo clean
+    - cargo build --release
+    - cp target/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}-amd64
+
+  artifacts:
+    paths:
+      - ./${PROJECT_NAME}-amd64
+      - ./${PROJECT_NAME}-aarch64
