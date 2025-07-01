@@ -19,6 +19,12 @@ pub enum Commands {
         param: String,
         value: String,
     },
+    Add {
+        #[arg(short, long, default_value = "all")]
+        section: String,
+        param: String,
+        value: String,
+    },
     Del {
         #[arg(short, long, default_value = "all")]
         section: String,
