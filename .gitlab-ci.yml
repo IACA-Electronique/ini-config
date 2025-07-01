@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
 
 variables:
   PROJECT_NAME: ini-config
@@ -17,12 +18,28 @@ build:
     - rustup target add aarch64-unknown-linux-gnu
     - cargo clean
     - cargo build --release --target aarch64-unknown-linux-gnu
-    - cp target/aarch64-unknown-linux-gnu/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}-aarch64
+    - cp target/aarch64-unknown-linux-gnu/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}.aarch64-gnu
     - cargo clean
     - cargo build --release
-    - cp target/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}-amd64
+    - cp target/release/${EXECUTABLE_NAME} ./${PROJECT_NAME}.amd64
 
   artifacts:
     paths:
-      - ./${PROJECT_NAME}-amd64
-      - ./${PROJECT_NAME}-aarch64
+      - ./${PROJECT_NAME}.amd64
+      - ./${PROJECT_NAME}.aarch64-gnu
+
+
+deploy-to-ftp:
+  stage: deploy
+  image: alpine:3.12
+  variables:
+    PACKAGE_NAME: ./${PROJECT_NAME}
+    REPO_PATH: /os/tools
+  only:
+    - tags
+  dependencies:
+    - build
+  before_script:
+    - apk update && apk add sshpass openssh-client bash
+  script:
+    - bash scripts/deploy.sh
