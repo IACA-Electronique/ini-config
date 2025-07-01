@@ -33,6 +33,15 @@ impl ConfigFile {
             None => Err("Configuration not loaded".to_string()),
         }
     }
+    pub fn add(&mut self, section: &str, key: &str, value: &str) -> Result<(), String> {
+        match &mut self.content {
+            Some(ini) => {
+                ini.with_section(Some(section)).add(key, value);
+                Ok(())
+            }
+            None => Err("Configuration not loaded".to_string()),
+        }
+    }
     pub fn delete(&mut self, section: &str, key: &str) -> Result<(), String> {
         match &mut self.content {
             Some(ini) => {
@@ -48,7 +57,7 @@ impl ConfigFile {
                 let mut result = String::new();
                 for (sec, prop) in ini {
                     if sec.is_some() {
-                        result.push_str(&format!("[{}]\n", sec.unwrap()));   
+                        result.push_str(&format!("[{}]\n", sec.unwrap()));
                     }
                     for (key, value) in prop.iter() {
                         result.push_str(&format!("{}={}\n", key, value));
